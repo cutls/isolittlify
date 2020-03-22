@@ -24,6 +24,8 @@ SDKを放棄したせいで…
 感想
 * フォークするより最初から書いた方が速かったかもしれない。
 
+→ https://isolittlify.netlify.com
+
 ## 以下本家LittlifyのREADME
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
