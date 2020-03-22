@@ -6,15 +6,21 @@ import {
     ChevronLeft,
     ChevronRight,
     Sliders,
-    Twitter,
+    RefreshCcw,
 } from "react-feather";
+import mastodon from "../images/mastodon.svg";
 
 import ExternalLink from "./ExternalLink";
 import { State as IConfig, Theme } from "./Config";
+import SpotifyWebApi from "spotify-web-api-js";
+const S = new SpotifyWebApi();
 
 interface Props {
-    state: Spotify.PlaybackState;
-    player: Spotify.SpotifyPlayer;
+    state: boolean;
+    at: string;
+    progressMs: number | null;
+    share: string;
+    callBasic: () => boolean;
 }
 
 export default class Controller extends React.Component<Props, {}> {
@@ -55,9 +61,15 @@ export default class Controller extends React.Component<Props, {}> {
         }
     }
 
+    private getInstance() {
+        const config: IConfig = JSON.parse(localStorage.config || "{}");
+        return config.instance;
+    }
+
     render() {
         const state = this.props.state;
-        const track = state.track_window.current_track;
+        const progressMs = this.props.progressMs;
+        S.setAccessToken(this.props.at);
         return (
             <div
                 className={classNames(
@@ -76,13 +88,23 @@ export default class Controller extends React.Component<Props, {}> {
                         "hover:text-gray-500",
                         "dark:hover:text-gray-600"
                     )}
-                    onClick={async () => {
-                        const currentState =
-                            (await this.props.player.getCurrentState()) || null;
-                        if (currentState && currentState.position < 5000) {
-                            this.props.player.previousTrack();
+                    onClick={() => {
+                        this.props.callBasic("refresh");
+                    }}
+                >
+                    <RefreshCcw size={16} />
+                </div>
+                <div
+                    className={classNames(
+                        "hover:text-gray-500",
+                        "dark:hover:text-gray-600"
+                    )}
+                    onClick={() => {
+                        if (progressMs && progressMs < 5000) {
+                            S.skipToPrevious();
                         }
-                        this.props.player.seek(0);
+                        S.seek(0);
+                        this.props.callBasic();
                     }}
                 >
                     <ChevronLeft size={16} />
@@ -93,10 +115,12 @@ export default class Controller extends React.Component<Props, {}> {
                         "dark:hover:text-gray-600"
                     )}
                     onClick={() => {
-                        this.props.player?.togglePlay();
+                        if (!state) S.play();
+                        else S.pause();
+                        this.props.callBasic();
                     }}
                 >
-                    {state.paused ? (
+                    {!state ? (
                         <Play className={classNames("filled")} size={20} />
                     ) : (
                         <Pause className={classNames("filled")} size={20} />
@@ -108,7 +132,8 @@ export default class Controller extends React.Component<Props, {}> {
                         "dark:hover:text-gray-600"
                     )}
                     onClick={() => {
-                        this.props.player?.nextTrack();
+                        S.skipToNext();
+                        this.props.callBasic();
                     }}
                 >
                     <ChevronRight size={16} />
@@ -132,11 +157,11 @@ export default class Controller extends React.Component<Props, {}> {
                         "hover:text-gray-500",
                         "dark:hover:text-gray-600"
                     )}
-                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
-                        `${track.name}\r\n${track.artists[0].name} - ${track.album.name}\r\nhttps://open.spotify.com/track/${track.id}`
+                    href={`https://${this.getInstance()}/share?text=${encodeURIComponent(
+                        this.props.share
                     )}`}
                 >
-                    <Twitter className={classNames("filled")} size={16} />
+                    <img src={mastodon} />
                 </ExternalLink>
             </div>
         );

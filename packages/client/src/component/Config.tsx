@@ -11,6 +11,7 @@ export enum Theme {
 export interface State {
     auto_auth?: boolean;
     theme?: Theme;
+    instance?: string | number | string[] | undefined;
 }
 
 export default class Config extends React.Component<{}, State> {
@@ -22,6 +23,7 @@ export default class Config extends React.Component<{}, State> {
         this.state = {
             auto_auth: false,
             theme: Theme.AUTO,
+            instance: undefined,
         };
     }
 
@@ -37,7 +39,7 @@ export default class Config extends React.Component<{}, State> {
         }
 
         // NOTE: どうせunloadしたらイベントリスナーが消えるから匿名関数でOK
-        window.addEventListener("beforeunload", (e) => {
+        window.addEventListener("beforeunload", e => {
             if (this.lock) {
                 e.preventDefault();
                 e.returnValue = "";
@@ -90,6 +92,21 @@ export default class Config extends React.Component<{}, State> {
                         </div>
                     </label>
                 </div>
+                <div>
+                    Mastodonにシェアするときのインスタンス名(例:
+                    mastodon.social)
+                    <input
+                        type="text"
+                        className="appearance-none bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                        placeholder="mastodon.social"
+                        value={this.state.instance}
+                        onChange={e => {
+                            this.setState({
+                                instance: e.target.value as string,
+                            });
+                        }}
+                    />
+                </div>
                 <div className="inline-flex">
                     <button
                         className={classNames(
@@ -119,7 +136,10 @@ export default class Config extends React.Component<{}, State> {
                             "rounded-r"
                         )}
                         onClick={() => {
-                            localStorage.setItem("config", JSON.stringify(this.state));
+                            localStorage.setItem(
+                                "config",
+                                JSON.stringify(this.state)
+                            );
                             this.lock = false;
                             window.close();
                         }}

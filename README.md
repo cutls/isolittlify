@@ -1,9 +1,28 @@
 <div align="center">
 <img src="https://raw.githubusercontent.com/wiki/eai04191/littlify/images/logo-256.png" width="150px"><br>
 
-# Littlify
+# Isolittlify -- forked from [Littlify](https://github.com/eai04191/littlify)
 
 </div>
+
+## Littlifyとの違い
+
+* プレイヤーをLittlifyに設定しなくていい。
+  * Web Playback SDKを放棄してサードパーティで普通のSoptify APIを叩くようにした。
+  * 自分みたいに別端末でSpotify聞きながら作業する変態向け。
+* TwitterシェアボタンをMastodonシェアボタンにした。インスタンスは設定画面でいじる。
+
+SDKを放棄したせいで…
+
+* 別端末でいろいろいじったりしても、その情報はリアルタイムで反映されない。
+  * 初期化時と、曲が変わった時にタイマーをセットして、その曲が終わったときに次の曲の情報を取りに行くようになっている。
+  * 途中で曲を変えたりしたときは、コントローラの更新ボタンを押す。
+* コンテクスト(前/後の曲)が取れなくなった(画面ごと消した。)
+
+感想
+* フォークするより最初から書いた方が速かったかもしれない。
+
+## 以下本家LittlifyのREADME
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
 [![All Contributors](https://img.shields.io/badge/all_contributors-3-orange.svg?style=flat-square)](#contributors-)

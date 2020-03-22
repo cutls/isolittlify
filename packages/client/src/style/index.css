@@ -18,3 +18,6 @@
 .controller-column > a > svg {
     @apply h-full m-auto;
 }
+.controller-column >a {
+    padding-top: 16px;
+}

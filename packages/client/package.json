@@ -39,6 +39,7 @@
         "react-feather": "^2.0.3",
         "react-router-dom": "^5.1.2",
         "sass": "^1.25.0",
+        "spotify-web-api-js": "^1.2.0",
         "tailwindcss": "^1.2.0",
         "tailwindcss-dark-mode": "^1.1.2"
     }

@@ -23,7 +23,7 @@ app.use(helmet())
     .use("/.netlify/functions/index/v1", router);
 
 app.get("/", function(_req, res) {
-    res.redirect(301, "https://github.com/eai04191/littlify");
+    res.redirect(301, "https://github.com/cutls/isolittlify");
 });
 
 export default app;

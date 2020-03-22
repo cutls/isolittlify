@@ -7,16 +7,27 @@ export default class LoginScreen extends React.Component {
     render() {
         return (
             <>
-                <h1>Littlify</h1>
-                <p>ベータ版です！！！！！機能は全然ありません！！！！！！</p>
+                <h1>Isolittlify</h1>
+                <p>Littlifyのフォーク</p>
+                <p>
+                    ベータ版なのに第三者がいじったせいですごい(婉曲)やつができたよ
+                </p>
                 <p>
                     ソースコード・説明:{" "}
+                    <ExternalLink
+                        href="https://github.com/cutls/isolittlify"
+                        className={classNames("text-blue-500")}
+                    >
+                        https://github.com/cutls/isolittlify
+                    </ExternalLink>
+                    (フォーク元{" "}
                     <ExternalLink
                         href="https://github.com/eai04191/littlify"
                         className={classNames("text-blue-500")}
                     >
                         https://github.com/eai04191/littlify
                     </ExternalLink>
+                    )
                 </p>
 
                 <SpotifyLoginButton />

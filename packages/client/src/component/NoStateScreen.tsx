@@ -1,14 +1,13 @@
 import React from "react";
-import tutorial from "../images/spotify-connect.png";
 
-export default class NoStateScreen extends React.Component {
+interface Props {
+    state: string;
+}
+export default class NoStateScreen extends React.Component<Props, {}> {
     render() {
         return (
             <>
-                <p>
-                    Littlifyに接続して再生しましょう！
-                    <img src={tutorial} />
-                </p>
+                <p>Littlifyに接続して再生しましょう！</p>
             </>
         );
     }

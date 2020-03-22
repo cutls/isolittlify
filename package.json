@@ -1,9 +1,9 @@
 {
-    "name": "littlify",
+    "name": "isolittlify",
     "version": "1.0.0",
     "main": "index.js",
-    "repository": "https://github.com/eai04191/littlify",
-    "author": "Aoi Irie <eai@mizle.net>",
+    "repository": "https://github.com/cutls/isolittlify",
+    "author": "Cutls P <web-pro@cutls.com>",
     "license": "MIT",
     "private": true,
     "scripts": {

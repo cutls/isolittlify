@@ -1,35 +1,40 @@
 import React from "react";
 import classNames from "classnames";
-
-import MiniTrack from "./MiniTrack";
 import SpotifyURILink from "./SpotifyURILink";
-import Shortcut from "./shortcut";
+//import Shortcut from "./shortcut";
 import Controller from "./Controller";
 import Artists from "./Artists";
+import SpotifyWebApi from "spotify-web-api-js";
+const S = new SpotifyWebApi();
 
 interface Props {
-    state: Spotify.PlaybackState;
-    player: Spotify.SpotifyPlayer;
+    state: boolean;
+    nowPlaying: SpotifyApi.TrackObjectFull | null;
+    nowContext: SpotifyApi.ContextObject | null;
+    at: string;
+    progressMs: number | null;
+    callBasic: () => boolean;
 }
 
 export default class Player extends React.Component<Props, {}> {
-    shortcut = new Shortcut(this.props.player);
+    //shortcut = new Shortcut(this.props.player);
+    //shortcutはあとでなんとかする
 
     componentDidMount(): void {
-        this.shortcut.enable();
+        //this.shortcut.enable();
     }
 
     componentWillUnmount(): void {
-        this.shortcut.disable();
+        //this.shortcut.disable();
     }
 
     render() {
-        const state = this.props.state;
-        const track = state.track_window.current_track;
-        const nextTracks = state.track_window.next_tracks;
-        const previousTracks = state.track_window.previous_tracks;
-        previousTracks.shift();
-        nextTracks.pop();
+        S.setAccessToken(this.props.at);
+        const track = this.props.nowPlaying;
+        const context = this.props.nowContext;
+        const progressMs = this.props.progressMs;
+        if (!track || !context) return;
+        const share = `${track.name}\r\n${track.artists[0].name} - ${track.album.name}\r\nhttps://open.spotify.com/track/${track.id}`;
         return (
             <>
                 <div className={classNames("flex", "border-gray-400")}>
@@ -45,7 +50,7 @@ export default class Player extends React.Component<Props, {}> {
                         )}
                     >
                         <img
-                            src={track.album.images[2].url}
+                            src={track.album.images[0].url}
                             className={classNames(
                                 "self-center",
                                 "h-screen",
@@ -104,40 +109,19 @@ export default class Player extends React.Component<Props, {}> {
                                         "dark:text-gray-500"
                                     )}
                                 >
-                                    <SpotifyURILink
-                                        uri={state.context.uri || "#"}
-                                    >
-                                        {
-                                            state.context.metadata
-                                                .context_description
-                                        }
+                                    <SpotifyURILink uri={context.uri || "#"}>
+                                        {context.type}
                                     </SpotifyURILink>
                                 </p>
                             </div>
                         </div>
                         <Controller
                             state={this.props.state}
-                            player={this.props.player}
+                            at={this.props.at}
+                            progressMs={progressMs}
+                            share={share}
+                            callBasic={this.props.callBasic}
                         />
-                    </div>
-                    <div
-                        className={classNames(
-                            "queue-column",
-                            "flex",
-                            "flex-col",
-                            "w-1/4",
-                            "border-l",
-                            "dark:border-gray-700"
-                        )}
-                    >
-                        <p>前のトラック</p>
-                        {previousTracks.map((track, index) => {
-                            return <MiniTrack track={track} key={index} />;
-                        })}
-                        <p>次のトラック</p>
-                        {nextTracks.map((track, index) => {
-                            return <MiniTrack track={track} key={index} />;
-                        })}
                     </div>
                 </div>
             </>

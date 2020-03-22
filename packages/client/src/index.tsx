@@ -3,33 +3,37 @@ import ReactDOM from "react-dom";
 import { Router, Route } from "react-router-dom";
 import queryString from "query-string";
 import classNames from "classnames";
-import axios from "axios";
 import Player from "./component/Player";
 import LoginScreen from "./component/LoginScreen";
-import NoStateScreen from "./component/NoStateScreen";
 import Config, { State as ConfigState } from "./component/Config";
 import history from "./history";
+import SpotifyWebApi from "spotify-web-api-js";
+const sleep = (msec: number) =>
+    new Promise(resolve => setTimeout(resolve, msec));
 
 interface Props {
     qs: queryString.ParsedQuery<string>;
 }
 
 interface State {
-    state: Spotify.PlaybackState | null;
+    nokori: number;
+    state: boolean;
+    playing: SpotifyApi.TrackObjectFull | null;
+    context: SpotifyApi.ContextObject | null;
     accessToken: string | null;
-    refreshToken: string | null;
-    player: Spotify.SpotifyPlayer | null;
+    progressMs: number | null;
 }
 
 class App extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
-
         this.state = {
-            state: null,
+            nokori: 15000,
+            state: false,
+            playing: null,
+            context: null,
             accessToken: this.props.qs.access_token?.toString() || null,
-            refreshToken: this.props.qs.refresh_token?.toString() || null,
-            player: null,
+            progressMs: 0,
         };
     }
 
@@ -52,118 +56,50 @@ class App extends React.Component<Props, State> {
             }
         }
     };
-
-    handleStateChange = (state: Spotify.PlaybackState) => {
-        console.log(state);
-        this.setState({
-            state: state,
-        });
-
-        if (!state || state.paused) {
-            document.title = "Littlify";
-        } else {
-            const currentTrack = state.track_window.current_track;
-            const artists = currentTrack.artists.map(v => v.name).join(", ");
-
-            document.title = `${currentTrack.name} · ${artists}`;
-        }
+    componentDidMount = () => {
+        setInterval(async () => {
+            const nkr = this.state.nokori;
+            if (nkr < 0) {
+                await sleep(1000);
+                this.basic();
+            }
+            this.setState({
+                nokori: nkr - 1000,
+            });
+        }, 1000);
+        this.basic();
     };
 
-    injectSpotifyEvents = ({ refreshToken }: { refreshToken: string }) => {
-        window.onSpotifyWebPlaybackSDKReady = () => {
-            const appName =
-                process.env.NODE_ENV === "development"
-                    ? "Littlify (Dev)"
-                    : "Littlify";
-            const player = new Spotify.Player({
-                name: appName,
-                volume: 0.15,
-                getOAuthToken: (cb: (accessToken: string) => void) => {
-                    console.log("新しいアクセストークン取るよ");
-                    axios
-                        .get(`${process.env.SERVER_URI}/v1/refresh_token`, {
-                            params: { refresh_token: refreshToken },
-                        })
-                        .then(res => {
-                            if (!res.data.access_token) {
-                                throw Error(
-                                    "res.data.access_token is notfound"
-                                );
-                            }
-                            this.setState(
-                                {
-                                    accessToken: res.data.access_token,
-                                },
-                                () => {
-                                    if (this.state.accessToken) {
-                                        history.replace({
-                                            ...history.location,
-                                            search: "",
-                                        });
-                                        console.log(
-                                            "新しいアクセストークン: ",
-                                            this.state.accessToken
-                                        );
-                                        cb(this.state.accessToken);
-                                    }
-                                }
-                            );
-                        })
-                        .catch(error =>
-                            console.log(
-                                "新しいアクセストークンの取得中にエラー",
-                                error
-                            )
-                        );
-                },
+    basic = async () => {
+        console.log("do");
+        const S = new SpotifyWebApi();
+        const at = this.state.accessToken;
+        if (at) {
+            S.setAccessToken(at);
+            await sleep(500);
+            const currentData = await S.getMyCurrentPlayingTrack();
+            if (!currentData) return;
+            const currentTrack = currentData.item;
+            const currentContext = currentData.context;
+            const progressMs = currentData.progress_ms;
+            if (!currentTrack || !progressMs) return;
+            const duration = currentTrack.duration_ms;
+            console.log(duration - progressMs);
+            this.setState({
+                playing: currentTrack,
+                context: currentContext,
+                state: currentData.is_playing,
+                progressMs: progressMs,
+                nokori: duration - progressMs,
             });
-            // Error handling
-            player.addListener("initialization_error", (e: Spotify.Error) => {
-                alert(e.message);
-                location.href = "/";
-                console.error(e.message);
+            const artists = currentTrack.artists.map(v => v.name).join(", ");
+            document.title = `${currentTrack.name} · ${artists}`;
+        } else {
+            this.setState({
+                nokori: 15000,
             });
-            player.addListener("authentication_error", (e: Spotify.Error) => {
-                alert(e.message);
-                location.href = "/";
-                console.error(e.message);
-            });
-            player.addListener("account_error", (e: Spotify.Error) => {
-                alert(e.message);
-                location.href = "/";
-                console.error(e.message);
-            });
-            player.addListener("playback_error", (e: Spotify.Error) => {
-                alert(e.message);
-                location.href = "/";
-                console.error(e.message);
-            });
-
-            player.addListener(
-                "player_state_changed",
-                (state: Spotify.PlaybackState) => {
-                    this.handleStateChange(state);
-                }
-            );
-
-            // Ready
-            player.on("ready", (deviceId: Spotify.WebPlaybackInstance) => {
-                console.log("Ready with Device ID", deviceId);
-            });
-
-            // Not Ready
-            player.on("not_ready", (deviceId: Spotify.WebPlaybackInstance) => {
-                console.log("Device ID has gone offline", deviceId);
-            });
-
-            // Connect to the player!
-            player.connect();
-            this.setState({ player });
-
-            // for debugging
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (window as any).player = player;
-        };
+        }
+        return true;
     };
 
     render() {
@@ -176,19 +112,24 @@ class App extends React.Component<Props, State> {
                     "dark:text-gray-200"
                 )}
             >
-                {this.state.refreshToken &&
-                    this.injectSpotifyEvents({
-                        refreshToken: this.state.refreshToken,
-                    })}
-
                 {this.state.accessToken ? (
-                    this.state.state && this.state.player ? (
+                    this.state.playing ? (
                         <Player
                             state={this.state.state}
-                            player={this.state.player}
+                            nowPlaying={this.state.playing}
+                            nowContext={this.state.context}
+                            at={this.state.accessToken}
+                            progressMs={this.state.progressMs}
+                            callBasic={() => this.basic()}
                         />
                     ) : (
-                        <NoStateScreen />
+                        <a
+                            onClick={() => {
+                                this.basic();
+                            }}
+                        >
+                            更新
+                        </a>
                     )
                 ) : (
                     <LoginScreen />

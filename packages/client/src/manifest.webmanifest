@@ -1,6 +1,6 @@
 {
-    "name": "Littlify",
-    "short_name": "Littlify",
+    "name": "Isolittlify",
+    "short_name": "Isolittlify",
     "theme_color": "#1a202c",
     "background_color": "#1a202c",
     "display": "standalone",
