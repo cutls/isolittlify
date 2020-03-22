@@ -4,6 +4,7 @@ import { Router, Route } from "react-router-dom";
 import queryString from "query-string";
 import classNames from "classnames";
 import Player from "./component/Player";
+import NoStateScreen from "./component/NoStateScreen";
 import LoginScreen from "./component/LoginScreen";
 import Config, { State as ConfigState } from "./component/Config";
 import history from "./history";
@@ -25,6 +26,7 @@ interface State {
 }
 
 class App extends React.Component<Props, State> {
+    interval!: number;
     constructor(props: Props) {
         super(props);
         this.state = {
@@ -57,7 +59,7 @@ class App extends React.Component<Props, State> {
         }
     };
     componentDidMount = () => {
-        setInterval(async () => {
+        this.interval = window.setInterval(async () => {
             const nkr = this.state.nokori;
             if (nkr < 0) {
                 await sleep(1000);
@@ -68,6 +70,10 @@ class App extends React.Component<Props, State> {
             });
         }, 1000);
         this.basic();
+    };
+
+    componentWillUnmount = () => {
+        clearInterval(this.interval);
     };
 
     basic = async () => {
@@ -99,7 +105,6 @@ class App extends React.Component<Props, State> {
                 nokori: 15000,
             });
         }
-        return true;
     };
 
     render() {
@@ -123,13 +128,7 @@ class App extends React.Component<Props, State> {
                             callBasic={() => this.basic()}
                         />
                     ) : (
-                        <a
-                            onClick={() => {
-                                this.basic();
-                            }}
-                        >
-                            更新
-                        </a>
+                        <NoStateScreen callBasic={() => this.basic()} />
                     )
                 ) : (
                     <LoginScreen />

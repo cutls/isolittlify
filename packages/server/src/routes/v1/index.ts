@@ -21,6 +21,7 @@ router.get("/login", (req, res) => {
         "user-modify-playback-state",
         "user-read-currently-playing",
         "user-read-playback-position",
+        "playlist-read-private",
     ].join(" ");
 
     res.redirect(

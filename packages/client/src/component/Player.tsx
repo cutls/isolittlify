@@ -1,7 +1,7 @@
 import React from "react";
 import classNames from "classnames";
 import SpotifyURILink from "./SpotifyURILink";
-//import Shortcut from "./shortcut";
+import Shortcut from "./shortcut";
 import Controller from "./Controller";
 import Artists from "./Artists";
 import SpotifyWebApi from "spotify-web-api-js";
@@ -13,20 +13,60 @@ interface Props {
     nowContext: SpotifyApi.ContextObject | null;
     at: string;
     progressMs: number | null;
-    callBasic: () => boolean;
+    callBasic: () => void;
 }
 
-export default class Player extends React.Component<Props, {}> {
-    //shortcut = new Shortcut(this.props.player);
-    //shortcutはあとでなんとかする
+interface State {
+    reasonableContext: string;
+}
+
+export default class Player extends React.Component<Props, State> {
+    shortcut = new Shortcut(S, this.props.state, this.props.callBasic);
+    constructor(props: Props) {
+        super(props);
+        this.state = {
+            reasonableContext: "",
+        };
+    }
 
     componentDidMount(): void {
-        //this.shortcut.enable();
+        this.shortcut.enable();
+        const track = this.props.nowPlaying;
+        const context = this.props.nowContext;
+        if (!context || !track) return;
+        this.getReasonableContext(context, track);
     }
 
     componentWillUnmount(): void {
-        //this.shortcut.disable();
+        this.shortcut.disable();
     }
+
+    getReasonableContext = async (
+        context: SpotifyApi.ContextObject,
+        track: SpotifyApi.TrackObjectFull
+    ) => {
+        S.setAccessToken(this.props.at);
+        if (context.type == "playlist") {
+            const uri = context.uri;
+            const m = uri.match(/spotify:playlist:([a-zA-Z0-9_]+)/);
+            if (m && m.length > 1) {
+                const playlistId = m[1];
+                const playlist = await S.getPlaylist(playlistId);
+                this.setState({
+                    reasonableContext: playlist.name,
+                });
+            }
+        } else if (context.type == "album") {
+            this.setState({
+                reasonableContext: track.album.name,
+            });
+        } else if (context.type == "artist") {
+            const artists = track.artists.map(v => v.name).join(", ");
+            this.setState({
+                reasonableContext: artists,
+            });
+        }
+    };
 
     render() {
         S.setAccessToken(this.props.at);
@@ -83,7 +123,7 @@ export default class Player extends React.Component<Props, {}> {
                             <div className={classNames("font-medium")}>
                                 <SpotifyURILink
                                     className={classNames("text-2xl")}
-                                    uri={track.uri}
+                                    uri={track}
                                 >
                                     {track.name}
                                 </SpotifyURILink>
@@ -97,7 +137,7 @@ export default class Player extends React.Component<Props, {}> {
                                 >
                                     <Artists artists={track.artists} />
                                     {" - "}
-                                    <SpotifyURILink uri={track.album.uri}>
+                                    <SpotifyURILink uri={track.album}>
                                         {track.album.name}
                                     </SpotifyURILink>
                                 </p>
@@ -109,8 +149,8 @@ export default class Player extends React.Component<Props, {}> {
                                         "dark:text-gray-500"
                                     )}
                                 >
-                                    <SpotifyURILink uri={context.uri || "#"}>
-                                        {context.type}
+                                    <SpotifyURILink uri={context || "#"}>
+                                        {this.state.reasonableContext}
                                     </SpotifyURILink>
                                 </p>
                             </div>

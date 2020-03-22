@@ -3,14 +3,14 @@ import React from "react";
 import SpotifyURILink from "./SpotifyURILink";
 
 interface Props {
-    artists: Spotify.Artist[];
+    artists: SpotifyApi.ArtistObjectSimplified[];
 }
 
 export default class Artists extends React.Component<Props, {}> {
     render() {
         return this.props.artists
             .map<React.ReactNode>(artist => (
-                <SpotifyURILink key={artist.uri} uri={artist.uri}>
+                <SpotifyURILink key={artist.uri} uri={artist}>
                     {artist.name}
                 </SpotifyURILink>
             ))

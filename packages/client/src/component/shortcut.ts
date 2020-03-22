@@ -1,16 +1,21 @@
+import SpotifyWebApi from "spotify-web-api-js";
+const sleep = (msec: number) =>
+    new Promise(resolve => setTimeout(resolve, msec));
 type Command = {
     key: string;
     ctrlKey?: boolean;
     shiftKey?: boolean;
     altKey?: boolean;
     metaKey?: boolean;
-    callback: (player: Spotify.SpotifyPlayer) => void;
+    callback: (player: SpotifyWebApi.SpotifyWebApiJs) => void;
 };
 
 type Property = keyof Command | keyof KeyboardEvent;
 
 export default class Shortcut {
-    private readonly player: Spotify.SpotifyPlayer;
+    private readonly player: SpotifyWebApi.SpotifyWebApiJs;
+    private readonly state: boolean;
+    private readonly callBasic!: () => void;
     private readonly properties: Property[] = [
         "key",
         "ctrlKey",
@@ -21,27 +26,40 @@ export default class Shortcut {
     private readonly commands: Command[] = [
         {
             key: " ", // Space Key
-            callback: player => {
-                player?.togglePlay();
+            callback: async player => {
+                if (this.state) player.pause();
+                else player.play();
+                await sleep(1500);
+                this.callBasic();
             },
         },
         {
             key: "ArrowLeft",
-            callback: player => {
-                player?.previousTrack();
+            callback: async player => {
+                player.skipToPrevious();
+                await sleep(1500);
+                this.callBasic();
             },
         },
         {
             key: "ArrowRight",
-            callback: player => {
-                player?.nextTrack();
+            callback: async player => {
+                player.skipToNext();
+                await sleep(1500);
+                this.callBasic();
             },
         },
     ];
     private readonly handler = this.keyDownHandler.bind(this);
 
-    constructor(player: Spotify.SpotifyPlayer) {
+    constructor(
+        player: SpotifyWebApi.SpotifyWebApiJs,
+        state: boolean,
+        callBasic: () => void
+    ) {
         this.player = player;
+        this.state = state;
+        this.callBasic = callBasic;
     }
 
     enable() {

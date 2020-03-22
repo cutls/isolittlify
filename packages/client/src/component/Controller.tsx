@@ -20,7 +20,7 @@ interface Props {
     at: string;
     progressMs: number | null;
     share: string;
-    callBasic: () => boolean;
+    callBasic: () => void;
 }
 
 export default class Controller extends React.Component<Props, {}> {
@@ -69,6 +69,12 @@ export default class Controller extends React.Component<Props, {}> {
     render() {
         const state = this.props.state;
         const progressMs = this.props.progressMs;
+        let share = null;
+        if (this.getInstance()) {
+            share = `https://${this.getInstance()}/share?text=${encodeURIComponent(
+                this.props.share
+            )}`;
+        }
         S.setAccessToken(this.props.at);
         return (
             <div
@@ -89,7 +95,7 @@ export default class Controller extends React.Component<Props, {}> {
                         "dark:hover:text-gray-600"
                     )}
                     onClick={() => {
-                        this.props.callBasic("refresh");
+                        this.props.callBasic();
                     }}
                 >
                     <RefreshCcw size={16} />
@@ -157,9 +163,7 @@ export default class Controller extends React.Component<Props, {}> {
                         "hover:text-gray-500",
                         "dark:hover:text-gray-600"
                     )}
-                    href={`https://${this.getInstance()}/share?text=${encodeURIComponent(
-                        this.props.share
-                    )}`}
+                    href={share}
                 >
                     <img src={mastodon} />
                 </ExternalLink>
