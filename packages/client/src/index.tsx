@@ -19,6 +19,7 @@ interface Props {
 interface State {
     nokori: number;
     state: boolean;
+    wait: boolean;
     playing: SpotifyApi.TrackObjectFull | null;
     context: SpotifyApi.ContextObject | null;
     accessToken: string | null;
@@ -32,6 +33,7 @@ class App extends React.Component<Props, State> {
         this.state = {
             nokori: 15000,
             state: false,
+            wait: false,
             playing: null,
             context: null,
             accessToken: this.props.qs.access_token?.toString() || null,
@@ -64,10 +66,11 @@ class App extends React.Component<Props, State> {
             if (nkr < 0) {
                 await sleep(1000);
                 this.basic();
+            } else {
+                this.setState({
+                    nokori: nkr - 1000,
+                });
             }
-            this.setState({
-                nokori: nkr - 1000,
-            });
         }, 1000);
         this.basic();
     };
@@ -78,6 +81,13 @@ class App extends React.Component<Props, State> {
 
     basic = async () => {
         console.log("do");
+        if (this.state.wait) {
+            return;
+        } else {
+            this.setState({
+                wait: true,
+            });
+        }
         const S = new SpotifyWebApi();
         const at = this.state.accessToken;
         if (at) {
@@ -97,12 +107,14 @@ class App extends React.Component<Props, State> {
                 state: currentData.is_playing,
                 progressMs: progressMs,
                 nokori: duration - progressMs,
+                wait: false,
             });
             const artists = currentTrack.artists.map(v => v.name).join(", ");
             document.title = `${currentTrack.name} · ${artists}`;
         } else {
             this.setState({
                 nokori: 15000,
+                wait: false,
             });
         }
     };
