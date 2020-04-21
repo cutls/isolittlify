@@ -34,6 +34,13 @@ export default class Shortcut {
             },
         },
         {
+            key: "r",
+            ctrlKey: true,
+            callback: async player => {
+                this.callBasic();
+            },
+        },
+        {
             key: "ArrowLeft",
             callback: async player => {
                 player.skipToPrevious();
