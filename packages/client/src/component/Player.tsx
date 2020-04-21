@@ -62,6 +62,7 @@ export default class Player extends React.Component<Props, State> {
                         )}
                     >
                         <img
+                            draggable="false"
                             src={track.album.images[0].url}
                             className={classNames(
                                 "self-center",
