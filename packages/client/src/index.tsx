@@ -24,6 +24,7 @@ interface State {
     context: SpotifyApi.ContextObject | null;
     accessToken: string | null;
     progressMs: number | null;
+    reasonableContext: string;
 }
 
 class App extends React.Component<Props, State> {
@@ -38,6 +39,7 @@ class App extends React.Component<Props, State> {
             context: null,
             accessToken: this.props.qs.access_token?.toString() || null,
             progressMs: 0,
+            reasonableContext: "",
         };
     }
 
@@ -98,7 +100,7 @@ class App extends React.Component<Props, State> {
             const currentTrack = currentData.item;
             const currentContext = currentData.context;
             const progressMs = currentData.progress_ms;
-            if (!currentTrack || !progressMs) return;
+            if (!currentTrack || !progressMs || !currentContext) return;
             const duration = currentTrack.duration_ms;
             console.log(duration - progressMs);
             this.setState({
@@ -111,10 +113,41 @@ class App extends React.Component<Props, State> {
             });
             const artists = currentTrack.artists.map(v => v.name).join(", ");
             document.title = `${currentTrack.name} · ${artists}`;
+
+            this.getReasonableContext(currentContext, currentTrack);
         } else {
             this.setState({
                 nokori: 15000,
                 wait: false,
+            });
+        }
+    };
+    getReasonableContext = async (
+        context: SpotifyApi.ContextObject,
+        track: SpotifyApi.TrackObjectFull
+    ) => {
+        const S = new SpotifyWebApi();
+        const at = this.state.accessToken;
+        if (!at) return;
+        S.setAccessToken(at);
+        if (context.type == "playlist") {
+            const uri = context.uri;
+            const m = uri.match(/spotify:playlist:([a-zA-Z0-9_]+)/);
+            if (m && m.length > 1) {
+                const playlistId = m[1];
+                const playlist = await S.getPlaylist(playlistId);
+                this.setState({
+                    reasonableContext: playlist.name,
+                });
+            }
+        } else if (context.type == "album") {
+            this.setState({
+                reasonableContext: track.album.name,
+            });
+        } else if (context.type == "artist") {
+            const artists = track.artists.map(v => v.name).join(", ");
+            this.setState({
+                reasonableContext: artists,
             });
         }
     };

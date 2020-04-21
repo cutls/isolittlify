@@ -28,6 +28,8 @@ export default class Config extends React.Component<{}, State> {
     }
 
     componentDidMount() {
+        if (location.search == "?notSetInstance")
+            alert("インスタンス名を設定してください");
         try {
             const state = JSON.parse(localStorage.config || "{}");
             if (Object.keys(state).length > 0) {

@@ -11,6 +11,7 @@ export default class ExternalLink extends React.Component<Props, {}> {
     render() {
         let href = this.props.href;
         if (!href) href = "#";
+        if (href == "notSetInstance") href = "/config?notSetInstance";
         return (
             <a
                 href={href}

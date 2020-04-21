@@ -69,7 +69,7 @@ export default class Controller extends React.Component<Props, {}> {
     render() {
         const state = this.props.state;
         const progressMs = this.props.progressMs;
-        let share = null;
+        let share = "notSetInstance";
         if (this.getInstance()) {
             share = `https://${this.getInstance()}/share?text=${encodeURIComponent(
                 this.props.share

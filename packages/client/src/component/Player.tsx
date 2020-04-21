@@ -34,39 +34,11 @@ export default class Player extends React.Component<Props, State> {
         const track = this.props.nowPlaying;
         const context = this.props.nowContext;
         if (!context || !track) return;
-        this.getReasonableContext(context, track);
     }
 
     componentWillUnmount(): void {
         this.shortcut.disable();
     }
-
-    getReasonableContext = async (
-        context: SpotifyApi.ContextObject,
-        track: SpotifyApi.TrackObjectFull
-    ) => {
-        S.setAccessToken(this.props.at);
-        if (context.type == "playlist") {
-            const uri = context.uri;
-            const m = uri.match(/spotify:playlist:([a-zA-Z0-9_]+)/);
-            if (m && m.length > 1) {
-                const playlistId = m[1];
-                const playlist = await S.getPlaylist(playlistId);
-                this.setState({
-                    reasonableContext: playlist.name,
-                });
-            }
-        } else if (context.type == "album") {
-            this.setState({
-                reasonableContext: track.album.name,
-            });
-        } else if (context.type == "artist") {
-            const artists = track.artists.map(v => v.name).join(", ");
-            this.setState({
-                reasonableContext: artists,
-            });
-        }
-    };
 
     render() {
         S.setAccessToken(this.props.at);
